@@ -1,0 +1,13 @@
+{
+  "name": "ai-orb-interface",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:backend": "node backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.0"
+  }
+}
+
+

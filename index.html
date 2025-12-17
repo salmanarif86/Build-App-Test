@@ -1,0 +1,1012 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Orb Interface</title>
+  <style>
+    :root {
+      --bg: #050910;
+      --panel: rgba(255, 255, 255, 0.04);
+      --line: rgba(255, 255, 255, 0.06);
+      --glow: #24e2ff;
+      --accent: #7b61ff;
+      --text: #e6f5ff;
+      --muted: #8ca0b3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 20%, rgba(75, 142, 255, 0.12), transparent 35%),
+                  radial-gradient(circle at 80% 10%, rgba(255, 70, 198, 0.18), transparent 40%),
+                  linear-gradient(135deg, #03060d 0%, #0a1222 60%, #04070f 100%);
+      color: var(--text);
+      font-family: "Segoe UI", "Consolas", "Lucida Console", "Futura", sans-serif;
+      letter-spacing: 0.04em;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(var(--line) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 140px 140px;
+      mask-image: radial-gradient(circle at center, rgba(0,0,0,0.65), transparent 70%);
+      pointer-events: none;
+    }
+
+    main {
+      position: relative;
+      width: min(1100px, 92vw);
+      padding: 48px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+    }
+
+    main::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 10%, rgba(36, 226, 255, 0.14), transparent 45%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .top-bar-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: radial-gradient(circle at 0 0, rgba(36, 226, 255, 0.14), transparent 60%);
+      padding: 6px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    select,
+    .pill-select {
+      appearance: none;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding-right: 16px;
+      cursor: pointer;
+    }
+
+    .pill-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+    }
+
+    .profile-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .profile-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: radial-gradient(circle at 30% 0, rgba(36, 226, 255, 0.9), rgba(4, 10, 24, 1));
+      box-shadow: 0 0 10px rgba(36, 226, 255, 0.4);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1.1fr) minmax(0, 1.3fr);
+      gap: 24px;
+      align-items: stretch;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+      }
+
+      .orb-wrap {
+        order: 1;
+      }
+
+      .session-sidebar {
+        order: 3;
+      }
+
+      .workspace-column {
+        order: 2;
+      }
+
+      main {
+        padding: 32px;
+      }
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 4vw, 44px);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #eaf7ff;
+      text-shadow: 0 0 12px rgba(36, 226, 255, 0.6);
+    }
+
+    p.lede {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .orb-wrap {
+      display: grid;
+      place-items: center;
+      position: relative;
+      padding: 24px 12px;
+    }
+
+    .orb {
+      width: min(36vw, 260px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      position: relative;
+      background: radial-gradient(circle at 30% 30%, #9ef9ff 0%, #21b6ff 18%, #0b4d7a 48%, #06152b 70%);
+      box-shadow:
+        0 0 24px rgba(36, 226, 255, 0.5),
+        0 0 60px rgba(123, 97, 255, 0.25),
+        inset 0 0 80px rgba(0, 0, 0, 0.5);
+      isolation: isolate;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .orb::before {
+      content: "";
+      position: absolute;
+      inset: -18px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(123, 97, 255, 0.35), rgba(36, 226, 255, 0.18));
+      filter: blur(28px);
+      z-index: -1;
+    }
+
+    .orb::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow:
+        0 0 16px rgba(36, 226, 255, 0.65),
+        0 0 60px rgba(36, 226, 255, 0.35),
+        inset 0 0 18px rgba(255, 255, 255, 0.08);
+      mix-blend-mode: screen;
+      animation: pulse 3.8s ease-in-out infinite;
+    }
+
+    .orb .ring {
+      position: absolute;
+      inset: -32px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255, 255, 255, 0.16);
+      box-shadow: 0 0 22px rgba(123, 97, 255, 0.45);
+      animation: orbit 12s linear infinite;
+      filter: drop-shadow(0 0 12px rgba(36, 226, 255, 0.4));
+    }
+
+    .orb .ring::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 0%, #b4f1ff 40%, #2b7bff 100%);
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 16px rgba(36, 226, 255, 0.9);
+    }
+
+    .orb .core {
+      position: absolute;
+      width: 42%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, #9ef9ff 50%, #13518c 100%);
+      box-shadow:
+        inset 0 0 12px rgba(0, 0, 0, 0.35),
+        0 0 24px rgba(36, 226, 255, 0.85);
+      animation: glow 2.8s ease-in-out infinite;
+    }
+
+    .orb .scan-line {
+      position: absolute;
+      width: 120%;
+      height: 2px;
+      left: -10%;
+      background: linear-gradient(90deg, transparent, rgba(36, 226, 255, 0.8), transparent);
+      animation: scan 5s linear infinite;
+      filter: drop-shadow(0 0 10px rgba(36, 226, 255, 0.8));
+    }
+
+    .orb.listening {
+      box-shadow:
+        0 0 30px rgba(36, 226, 255, 0.8),
+        0 0 110px rgba(123, 97, 255, 0.45),
+        inset 0 0 90px rgba(0, 0, 0, 0.5);
+      transform: scale(1.02);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .orb.listening .core {
+      animation-duration: 1.6s;
+      box-shadow:
+        inset 0 0 14px rgba(0, 0, 0, 0.45),
+        0 0 42px rgba(36, 226, 255, 0.95);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.38; transform: scale(1); }
+      50% { opacity: 0.72; transform: scale(1.05); }
+    }
+
+    @keyframes orbit {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes glow {
+      0%, 100% { filter: drop-shadow(0 0 16px rgba(36, 226, 255, 0.7)); }
+      50% { filter: drop-shadow(0 0 28px rgba(36, 226, 255, 1)); }
+    }
+
+    @keyframes scan {
+      0% { top: 4%; opacity: 0; }
+      10% { opacity: 1; }
+      50% { top: 92%; opacity: 1; }
+      60% { opacity: 0; }
+      100% { top: 4%; opacity: 0; }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--glow);
+      box-shadow: 0 0 10px rgba(36, 226, 255, 0.9);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    button#start-btn {
+      appearance: none;
+      border: 1px solid rgba(36, 226, 255, 0.8);
+      color: #0d1522;
+      background: linear-gradient(135deg, #24e2ff, #7b61ff);
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 10px 28px rgba(36, 226, 255, 0.3), 0 0 24px rgba(123, 97, 255, 0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    button#start-btn:hover {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 14px 34px rgba(36, 226, 255, 0.38), 0 0 32px rgba(123, 97, 255, 0.42);
+      filter: brightness(1.05);
+    }
+
+    button#start-btn:active {
+      transform: translateY(0) scale(0.995);
+    }
+
+    button#start-btn:disabled {
+      cursor: not-allowed;
+      background: #1c2536;
+      color: var(--muted);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    #transcript {
+      min-height: 140px;
+      font-size: 17px;
+      line-height: 1.6;
+      letter-spacing: 0.08em;
+      color: #f8fcff;
+      text-shadow: 0 0 12px rgba(36, 226, 255, 0.45);
+      word-break: break-word;
+    }
+
+    #transcript .interim {
+      color: rgba(232, 244, 255, 0.6);
+    }
+
+    #transcript .final {
+      color: #f3fbff;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .session-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .session-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .session-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 260px;
+      overflow: hidden auto;
+      padding-right: 4px;
+    }
+
+    .session-item {
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: rgba(6, 16, 34, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+      font-size: 12px;
+    }
+
+    .session-item:hover {
+      background: rgba(15, 32, 66, 0.95);
+      border-color: rgba(36, 226, 255, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .session-item-title {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .session-item-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .workspace-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stacked-panels {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #transcript {
+      min-height: 110px;
+      font-size: 15px;
+      line-height: 1.6;
+      letter-spacing: 0.08em;
+      color: #f8fcff;
+      text-shadow: 0 0 12px rgba(36, 226, 255, 0.45);
+      word-break: break-word;
+    }
+
+    #ai-output {
+      min-height: 120px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #eaf2ff;
+      letter-spacing: 0.04em;
+      outline: none;
+      white-space: pre-wrap;
+    }
+
+    #ai-output[contenteditable="true"]:empty::before {
+      content: "The orb will respond here when you invoke a creative action.";
+      color: var(--muted);
+    }
+
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+      justify-content: flex-start;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .action-bar button {
+      appearance: none;
+      border-radius: 999px;
+      border: 1px solid rgba(36, 226, 255, 0.55);
+      background: rgba(10, 24, 44, 0.9);
+      color: var(--text);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    .action-bar button:hover {
+      background: rgba(16, 40, 78, 0.95);
+      box-shadow: 0 0 12px rgba(36, 226, 255, 0.42);
+    }
+
+    .action-bar button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .action-bar-label {
+      margin-left: auto;
+      font-size: 11px;
+    }
+
+    .output-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .output-toolbar button {
+      appearance: none;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(7, 14, 30, 0.96);
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      padding: 6px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .output-toolbar button:hover {
+      background: rgba(18, 30, 56, 1);
+      border-color: rgba(36, 226, 255, 0.55);
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="app-shell">
+      <header class="top-bar">
+        <div class="brand">
+          <div class="brand-title">AI ORB</div>
+          <div class="brand-tagline">Creative voice workspace</div>
+        </div>
+        <div class="top-bar-controls">
+          <div class="pill">
+            <span class="pill-label">Mode</span>
+            <select id="mode-select" aria-label="Creative mode">
+              <option value="brainstorm">Brainstorm</option>
+              <option value="story">Story</option>
+              <option value="outline">Outline</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="pill">
+            <span class="pill-label">Tone</span>
+            <select id="tone-select" aria-label="Tone">
+              <option value="neutral">Neutral</option>
+              <option value="playful">Playful</option>
+              <option value="serious">Serious</option>
+            </select>
+          </div>
+          <div class="pill">
+            <span class="pill-label">Length</span>
+            <select id="length-select" aria-label="Length">
+              <option value="concise">Concise</option>
+              <option value="medium">Medium</option>
+              <option value="detailed">Detailed</option>
+            </select>
+          </div>
+          <div class="profile-chip">
+            <div class="profile-avatar" aria-hidden="true"></div>
+            <span>Session Orb</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="session-sidebar">
+          <div class="panel">
+            <div class="session-header">
+              <span>Sessions</span>
+              <button id="new-session-btn" type="button" style="font-size:11px;border:none;background:none;color:var(--glow);cursor:pointer;letter-spacing:0.12em;text-transform:uppercase;">New</button>
+            </div>
+            <div id="session-list" class="session-list">
+              <!-- Sessions will render here -->
+            </div>
+          </div>
+        </aside>
+
+        <div class="orb-wrap">
+          <div class="orb" id="orb">
+            <div class="ring"></div>
+            <div class="scan-line"></div>
+            <div class="core"></div>
+          </div>
+        </div>
+
+        <section class="workspace-column">
+          <div>
+            <h1>AI Orb Interface</h1>
+            <p class="lede">Speak to the orb and see your words ripple across the interface in real time. Then let it transform your ideas into structured creative output.</p>
+          </div>
+
+          <div class="panel stacked-panels">
+            <div>
+              <div class="status-row">
+                <div class="pulse-dot" aria-hidden="true"></div>
+                <div id="status">Tap activate to begin voice capture.</div>
+              </div>
+              <button id="start-btn" type="button">Activate Voice</button>
+              <div class="hint">Your words will render live while we capture them into the current session.</div>
+            </div>
+
+            <div class="panel" style="margin-top: 6px;">
+              <div id="transcript">Awaiting input...</div>
+              <div class="action-bar">
+                <button id="summarize-btn" type="button">Summarize</button>
+                <button id="expand-btn" type="button">Expand</button>
+                <button id="remix-btn" type="button">Remix</button>
+                <span class="action-bar-label" id="actions-hint">Choose a creative action once you've spoken.</span>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div id="ai-output" contenteditable="true" aria-label="AI creative output"></div>
+              <div class="output-toolbar">
+                <button id="copy-output-btn" type="button">Copy</button>
+                <button id="export-output-btn" type="button">Export</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const API_BASE = 'http://localhost:3001';
+
+      const startBtn = document.getElementById('start-btn');
+      const statusEl = document.getElementById('status');
+      const transcriptEl = document.getElementById('transcript');
+      const orb = document.getElementById('orb');
+
+      const modeSelect = document.getElementById('mode-select');
+      const toneSelect = document.getElementById('tone-select');
+      const lengthSelect = document.getElementById('length-select');
+
+      const summarizeBtn = document.getElementById('summarize-btn');
+      const expandBtn = document.getElementById('expand-btn');
+      const remixBtn = document.getElementById('remix-btn');
+      const actionsHint = document.getElementById('actions-hint');
+
+      const aiOutputEl = document.getElementById('ai-output');
+      const copyOutputBtn = document.getElementById('copy-output-btn');
+      const exportOutputBtn = document.getElementById('export-output-btn');
+
+      const sessionListEl = document.getElementById('session-list');
+      const newSessionBtn = document.getElementById('new-session-btn');
+
+      const sessionState = {
+        current: {
+          id: null,
+          mode: modeSelect ? modeSelect.value : 'brainstorm',
+          tone: toneSelect ? toneSelect.value : 'neutral',
+          length: lengthSelect ? lengthSelect.value : 'medium',
+          transcriptFinal: '',
+          transcriptInterim: '',
+          aiOutput: ''
+        }
+      };
+
+      function updateTranscriptView() {
+        const { transcriptFinal, transcriptInterim } = sessionState.current;
+        if (!transcriptFinal && !transcriptInterim) {
+          transcriptEl.textContent = 'Awaiting input...';
+          return;
+        }
+        transcriptEl.innerHTML =
+          `<span class="final">${transcriptFinal}</span>` +
+          `<span class="interim">${transcriptInterim}</span>`;
+      }
+
+      function syncAiOutputFromState() {
+        if (sessionState.current.aiOutput) {
+          aiOutputEl.textContent = sessionState.current.aiOutput;
+        }
+      }
+
+      function getCurrentOptions() {
+        return {
+          mode: sessionState.current.mode,
+          tone: sessionState.current.tone,
+          length: sessionState.current.length
+        };
+      }
+
+      function setLoadingActions(loading, label) {
+        [summarizeBtn, expandBtn, remixBtn].forEach(btn => {
+          if (!btn) return;
+          btn.disabled = loading;
+        });
+        if (loading && label) {
+          actionsHint.textContent = label;
+        } else {
+          actionsHint.textContent = 'Choose a creative action once you\'ve spoken.';
+        }
+      }
+
+      async function callGenerateAPI(action) {
+        const transcript = sessionState.current.transcriptFinal.trim();
+        if (!transcript) {
+          actionsHint.textContent = 'Speak to the orb first so it has something to transform.';
+          return;
+        }
+
+        setLoadingActions(true, 'Asking the orb to think...');
+
+        const body = {
+          transcript,
+          action,
+          ...getCurrentOptions(),
+          sessionId: sessionState.current.id
+        };
+
+        try {
+          const res = await fetch(`${API_BASE}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+
+          const data = await res.json();
+          const outputText = data.outputText || '';
+          sessionState.current.aiOutput = outputText;
+          aiOutputEl.textContent = outputText;
+          actionsHint.textContent = 'You can edit the orb’s response or start a new session.';
+        } catch (err) {
+          console.error('Failed to call /api/generate', err);
+          actionsHint.textContent = 'The orb could not reach its backend. Check the server and try again.';
+        } finally {
+          setLoadingActions(false);
+        }
+      }
+
+      async function loadSessions() {
+        if (!sessionListEl) return;
+        sessionListEl.innerHTML = '';
+        try {
+          const res = await fetch(`${API_BASE}/api/sessions`);
+          if (!res.ok) return;
+          const sessions = await res.json();
+          if (!Array.isArray(sessions) || !sessions.length) {
+            sessionListEl.innerHTML = '<div class="hint">No saved sessions yet. Use New to archive this one.</div>';
+            return;
+          }
+          sessions.forEach(session => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'session-item';
+            item.dataset.sessionId = session.id;
+            item.innerHTML = `
+              <div class="session-item-title">${session.title || 'Untitled session'}</div>
+              <div class="session-item-meta">${session.mode || 'mode'} · ${session.createdAt ? new Date(session.createdAt).toLocaleString() : ''}</div>
+            `;
+            item.addEventListener('click', () => openSession(session.id));
+            sessionListEl.appendChild(item);
+          });
+        } catch (err) {
+          console.error('Failed to load sessions', err);
+          sessionListEl.innerHTML = '<div class="hint">Unable to load sessions. Backend may be offline.</div>';
+        }
+      }
+
+      async function openSession(id) {
+        try {
+          const res = await fetch(`${API_BASE}/api/session/${encodeURIComponent(id)}`);
+          if (!res.ok) return;
+          const session = await res.json();
+          sessionState.current.id = session.id || null;
+          sessionState.current.mode = session.mode || sessionState.current.mode;
+          sessionState.current.tone = session.tone || sessionState.current.tone;
+          sessionState.current.length = session.length || sessionState.current.length;
+          sessionState.current.transcriptFinal = session.transcript || '';
+          sessionState.current.transcriptInterim = '';
+          sessionState.current.aiOutput = session.aiOutput || '';
+
+          if (modeSelect && session.mode) modeSelect.value = session.mode;
+          if (toneSelect && session.tone) toneSelect.value = session.tone;
+          if (lengthSelect && session.length) lengthSelect.value = session.length;
+
+          updateTranscriptView();
+          syncAiOutputFromState();
+        } catch (err) {
+          console.error('Failed to open session', err);
+        }
+      }
+
+      async function archiveCurrentAndReset() {
+        const transcript = sessionState.current.transcriptFinal.trim();
+        const aiOutput = sessionState.current.aiOutput.trim();
+
+        if (transcript || aiOutput) {
+          try {
+            await fetch(`${API_BASE}/api/session`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                transcript,
+                aiOutput,
+                ...getCurrentOptions()
+              })
+            });
+            await loadSessions();
+          } catch (err) {
+            console.error('Failed to archive session', err);
+          }
+        }
+
+        sessionState.current.id = null;
+        sessionState.current.transcriptFinal = '';
+        sessionState.current.transcriptInterim = '';
+        sessionState.current.aiOutput = '';
+        updateTranscriptView();
+        aiOutputEl.textContent = '';
+        statusEl.textContent = 'Tap activate to begin voice capture.';
+      }
+
+      if (!SpeechRecognition) {
+        statusEl.textContent = 'Speech recognition is not supported in this browser.';
+        startBtn.disabled = true;
+        startBtn.textContent = 'Unsupported';
+      } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        let isListening = false;
+
+        startBtn.addEventListener('click', () => {
+          if (isListening) {
+            recognition.stop();
+          } else {
+            try {
+              recognition.start();
+            } catch (err) {
+              // Chrome will throw if start is called twice; ignore quietly.
+            }
+          }
+        });
+
+        recognition.onstart = () => {
+          isListening = true;
+          statusEl.textContent = 'Listening... speak now.';
+          startBtn.textContent = 'Stop Listening';
+          orb.classList.add('listening');
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+          statusEl.textContent = 'Tap activate to begin voice capture.';
+          startBtn.textContent = 'Activate Voice';
+          orb.classList.remove('listening');
+        };
+
+        recognition.onerror = (event) => {
+          isListening = false;
+          orb.classList.remove('listening');
+          startBtn.textContent = 'Activate Voice';
+
+          if (event.error === 'no-speech') {
+            statusEl.textContent = 'No speech detected. Try again.';
+            return;
+          }
+
+          statusEl.textContent = `Error: ${event.error}`;
+        };
+
+        recognition.onresult = (event) => {
+          let interimText = '';
+          let finalText = '';
+
+          for (let i = 0; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript.trim();
+
+            if (event.results[i].isFinal) {
+              finalText += `${transcript} `;
+            } else {
+              interimText += `${transcript} `;
+            }
+          }
+
+          sessionState.current.transcriptFinal = finalText;
+          sessionState.current.transcriptInterim = interimText;
+          updateTranscriptView();
+        };
+      }
+
+      modeSelect.addEventListener('change', () => {
+        sessionState.current.mode = modeSelect.value;
+      });
+      toneSelect.addEventListener('change', () => {
+        sessionState.current.tone = toneSelect.value;
+      });
+      lengthSelect.addEventListener('change', () => {
+        sessionState.current.length = lengthSelect.value;
+      });
+
+      summarizeBtn.addEventListener('click', () => callGenerateAPI('summarize'));
+      expandBtn.addEventListener('click', () => callGenerateAPI('expand'));
+      remixBtn.addEventListener('click', () => callGenerateAPI('remix'));
+
+      newSessionBtn.addEventListener('click', () => {
+        archiveCurrentAndReset();
+      });
+
+      copyOutputBtn.addEventListener('click', async () => {
+        const text = aiOutputEl.textContent || '';
+        if (!text.trim()) return;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+          }
+        } catch (err) {
+          console.error('Failed to copy output', err);
+        }
+      });
+
+      exportOutputBtn.addEventListener('click', () => {
+        const text = aiOutputEl.textContent || '';
+        if (!text.trim()) return;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ai-orb-output.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      loadSessions();
+    })();
+  </script>
+</body>
+</html>
