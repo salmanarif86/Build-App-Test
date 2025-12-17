@@ -611,6 +611,16 @@
             </select>
           </div>
           <div class="pill">
+            <span class="pill-label">Voice</span>
+            <select id="voice-select" aria-label="Voice">
+              <option value="aurora">Aurora</option>
+              <option value="atlas">Atlas</option>
+              <option value="lyra">Lyra</option>
+              <option value="echo">Echo</option>
+              <option value="lumen">Lumen</option>
+            </select>
+          </div>
+          <div class="pill">
             <span class="pill-label">Length</span>
             <select id="length-select" aria-label="Length">
               <option value="concise">Concise</option>
@@ -697,6 +707,7 @@
 
       const modeSelect = document.getElementById('mode-select');
       const toneSelect = document.getElementById('tone-select');
+      const voiceSelect = document.getElementById('voice-select');
       const lengthSelect = document.getElementById('length-select');
 
       const summarizeBtn = document.getElementById('summarize-btn');
@@ -716,6 +727,7 @@
           id: null,
           mode: modeSelect ? modeSelect.value : 'brainstorm',
           tone: toneSelect ? toneSelect.value : 'neutral',
+          voice: voiceSelect ? voiceSelect.value : 'aurora',
           length: lengthSelect ? lengthSelect.value : 'medium',
           transcriptFinal: '',
           transcriptInterim: '',
@@ -744,6 +756,7 @@
         return {
           mode: sessionState.current.mode,
           tone: sessionState.current.tone,
+          voice: sessionState.current.voice,
           length: sessionState.current.length
         };
       }
@@ -837,6 +850,7 @@
           sessionState.current.id = session.id || null;
           sessionState.current.mode = session.mode || sessionState.current.mode;
           sessionState.current.tone = session.tone || sessionState.current.tone;
+          sessionState.current.voice = session.voice || sessionState.current.voice;
           sessionState.current.length = session.length || sessionState.current.length;
           sessionState.current.transcriptFinal = session.transcript || '';
           sessionState.current.transcriptInterim = '';
@@ -844,6 +858,7 @@
 
           if (modeSelect && session.mode) modeSelect.value = session.mode;
           if (toneSelect && session.tone) toneSelect.value = session.tone;
+          if (voiceSelect && session.voice) voiceSelect.value = session.voice;
           if (lengthSelect && session.length) lengthSelect.value = session.length;
 
           updateTranscriptView();
@@ -959,6 +974,9 @@
       });
       toneSelect.addEventListener('change', () => {
         sessionState.current.tone = toneSelect.value;
+      });
+      voiceSelect.addEventListener('change', () => {
+        sessionState.current.voice = voiceSelect.value;
       });
       lengthSelect.addEventListener('change', () => {
         sessionState.current.length = lengthSelect.value;

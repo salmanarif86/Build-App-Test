@@ -33,7 +33,7 @@ function writeSessions(sessions) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(sessions, null, 2), 'utf8');
 }
 
-function createSession({ transcript, aiOutput, mode, tone, length }) {
+function createSession({ transcript, aiOutput, mode, tone, length, voice }) {
   const sessions = readSessions();
   const now = new Date().toISOString();
   const id = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -47,6 +47,7 @@ function createSession({ transcript, aiOutput, mode, tone, length }) {
     mode: mode || 'brainstorm',
     tone: tone || 'neutral',
     length: length || 'medium',
+    voice: voice || 'aurora',
     createdAt: now,
     updatedAt: now
   };
@@ -57,7 +58,7 @@ function createSession({ transcript, aiOutput, mode, tone, length }) {
 }
 
 app.post('/api/generate', async (req, res) => {
-  const { transcript, mode, tone, length, action } = req.body || {};
+  const { transcript, mode, tone, length, voice, action } = req.body || {};
 
   if (!transcript || typeof transcript !== 'string') {
     return res.status(400).json({ error: 'Missing transcript' });
@@ -82,7 +83,7 @@ app.post('/api/generate', async (req, res) => {
   }
 
   const settingsLine =
-    `Mode: ${mode || 'brainstorm'} · Tone: ${tone || 'neutral'} · Length: ${length || 'medium'}`;
+    `Mode: ${mode || 'brainstorm'} · Tone: ${tone || 'neutral'} · Length: ${length || 'medium'} · Voice: ${voice || 'aurora'}`;
 
   const outputText = `${prefix}${settingsLine}\n\n${transcript}`;
 
@@ -90,8 +91,8 @@ app.post('/api/generate', async (req, res) => {
 });
 
 app.post('/api/session', (req, res) => {
-  const { transcript, aiOutput, mode, tone, length } = req.body || {};
-  const session = createSession({ transcript, aiOutput, mode, tone, length });
+  const { transcript, aiOutput, mode, tone, length, voice } = req.body || {};
+  const session = createSession({ transcript, aiOutput, mode, tone, length, voice });
   res.status(201).json(session);
 });
 
